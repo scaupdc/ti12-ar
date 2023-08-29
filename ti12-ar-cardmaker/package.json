@@ -1,0 +1,13 @@
+{
+  "name": "ti12-ar-cardmaker",
+  "version": "1.0.0",
+  "description": "card maker.",
+  "main": "index.js",
+  "scripts": {
+  },
+  "author": "scau_pdc",
+  "license": "ISC",
+  "dependencies": {
+    "redis": "^4.6.8"
+  }
+}

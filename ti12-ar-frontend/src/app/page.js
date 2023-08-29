@@ -6,28 +6,86 @@ import { font } from "./font"
 import html2canvas from 'html2canvas'
 import { useEffect, useRef, useState } from 'react'
 
-export default function Home() {
+const ACTION_DOWNLOAD_CARD = 1
+const ACTION_SEND_CARD = 2
+let action = null
 
+const TARGET_0 = 0
+const TARGET_1 = 1
+const TARGET_2 = 1
+const TARGET_3 = 1
+const TARGET_4 = 1
+const TARGET_5 = 1
+let target = TARGET_0
+
+console.log("action=" + action)
+
+export default function Home() {
   const refCardContent = useRef(null)
   const [cardReadOnly, setCardReadOnly] = useState(false)
 
   useEffect(() => {
-    console.log(cardReadOnly)
-    if (cardReadOnly) {
-      console.log("get")
-      console.log(refCardContent.current)
-      html2canvas(refCardContent.current, {
-        scale: 1
-      }).then(function (canvas) {
-        console.log("shit")
-        document.body.appendChild(canvas);
-        setCardReadOnly(false)
-      })
+    console.log("action=" + action)
+    switch (action) {
+      case ACTION_DOWNLOAD_CARD:
+        handleDownloadCard()
+        break;
+      case ACTION_SEND_CARD:
+        handleSendCard()
+        break;
+
+      default:
+        break;
     }
   })
 
-  const clickSaveCard = (e) => {
-    console.log("click")
+  const handleDownloadCard = () => {
+    html2canvas(refCardContent.current, {
+      scale: 1
+    }).then(function (canvas) {
+      const canvasData = canvas.toDataURL("image/jpeg", 1)
+      let aLink = document.createElement("a");
+      aLink.style.display = "none";
+      aLink.href = canvasData;
+      aLink.download = new Date().getTime() + ".jpg";
+      document.body.appendChild(aLink);
+      aLink.click();
+      document.body.removeChild(aLink);
+      console.log("here")
+      action = null
+      setCardReadOnly(false)
+    })
+  }
+
+  const handleSendCard = () => {
+    console.log("handleSendCard")
+    html2canvas(refCardContent.current, {
+      scale: 1
+    }).then(async function (canvas) {
+      const canvasData = canvas.toDataURL("image/png")
+      const res = await fetch('/api/card', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ target, date: new Date().getTime(), card: canvasData }),
+      })
+      action = null
+      // console.log(await res.json())
+      setCardReadOnly(false)
+    })
+  }
+
+  const clickDownloadCard = (e) => {
+    console.log("download card")
+    action = ACTION_DOWNLOAD_CARD
+    setCardReadOnly(true)
+  }
+
+  const clickSendCard = (e) => {
+    console.log("send card")
+    action = ACTION_SEND_CARD
+    console.log("action=" + action)
     setCardReadOnly(true)
   }
 
@@ -57,8 +115,8 @@ export default function Home() {
       </div>
 
       <div>
-        <button onClick={clickSaveCard}>存图</button>
-        <button>寄信</button>
+        <button onClick={clickDownloadCard}>下载卡片</button>
+        <button onClick={clickSendCard}>寄出卡片</button>
       </div>
     </div>
   )
