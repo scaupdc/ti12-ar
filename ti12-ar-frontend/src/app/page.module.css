@@ -5,8 +5,8 @@
   margin: 0 auto;
   margin-top: 50px;
 
-  width: 840px;
-  height: 558px;
+  width: 874px;
+  height: 592px;
   background: url(/card_bg_light.png) no-repeat;
   background-size: contain;
   background-position: center;
@@ -20,15 +20,15 @@
 
 .stamp {
   position: absolute;
-  right: 55px;
-  top: 59px;
+  right: 45px;
+  top: 31px;
 }
 
 .cardContent {
-  width: 611px;
-  height: 411px;
+  width: 620px;
+  height: 368px;
   position: relative;
-  background: url(/card_bg.png) no-repeat;
+  background: url(/card.png) no-repeat;
   background-size: contain;
   background-position: center;
 }
@@ -41,14 +41,14 @@
 
 .headWrapper {
   position: absolute;
-  left: 88px;
-  top: 70px;
+  left: 80px;
+  top: 44px;
 }
 
 .tailWrapper {
   position: absolute;
-  right: 38px;
-  bottom: 46px;
+  right: 28px;
+  bottom: 15px;
 }
 
 .headTo,
@@ -72,7 +72,7 @@
 }
 
 .fromWho {
-  width: 186px;
+  width: 195px;
 }
 
 .fromWho:empty::before {
@@ -82,12 +82,12 @@
 
 .contentWrapper {
   position: absolute;
-  left: 88px;
-  top: 140px;
+  left: 80px;
+  top: 124px;
 }
 
 .content {
-  width: 439px;
+  width: 462px;
   height: 156px;
   font-size: 22px;
   font-weight: bold;
@@ -96,12 +96,36 @@
   outline: none;
   border: dashed 2px #0051B2;
   text-align: center;
-  line-height: 1.8em;
+  line-height: 1.75em;
   box-sizing: border-box;
 }
 
 .content:empty::before {
   content: attr(placeholder);
   color: #CDCDCD;
-  line-height: 2em;
+}
+
+.topTabs,
+.writeBottomTools {
+  display: flex;
+  justify-content: center;
+}
+
+.viewBottomTools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.viewBtnGroup {
+  margin-bottom: 10px;
+}
+
+.btn {
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.btn:last-child {
+  margin-right: 0;
 }
