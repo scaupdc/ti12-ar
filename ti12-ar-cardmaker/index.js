@@ -13,7 +13,7 @@ function createFolders() {
 
 async function listenRedis() {
     const client = redis.createClient({
-        url: 'redis://default:next@10.55.134.36:6379'
+        url: 'redis://default:next@192.168.2.39:6379'
     });
 
     client.on('error', err => console.log('Redis Client Error', err))
