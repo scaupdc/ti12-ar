@@ -13,9 +13,9 @@ export async function POST(request) {
 
   await client.connect();
 
-  await client.lPush('card', JSON.stringify(bodyJson))
+  await client.lPush('CARD', JSON.stringify(bodyJson))
 
   await client.disconnect();
 
-  return NextResponse.json(new JsonResp(200, "发送成功", null))
+  return NextResponse.json(new JsonResp(200, '发送成功', null))
 }

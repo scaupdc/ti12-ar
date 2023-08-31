@@ -3,9 +3,10 @@
 import styles from './page.module.css'
 import { font } from './font'
 import html2canvas from 'html2canvas'
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import TargetSelector from './target_selector'
 import { unstable_batchedUpdates } from 'react-dom'
+import GlobalMask from './global_mask'
 
 const ACTION_MAIN_WRITE_CARD = 1
 const ACTION_SUB_WRITE_CARD_INIT = 10
@@ -49,12 +50,16 @@ const TARGETS = [
   }
 ]
 
+let userCard
+
 export default function Home() {
   const refCardContent = useRef(null)
   const [mainAction, setMainAction] = useState(ACTION_MAIN_WRITE_CARD)
   const [subAction, setSubAction] = useState(ACTION_SUB_WRITE_CARD_INIT)
   const [target, setTarget] = useState(TARGETS[0])
   const [targetSelectorOpen, setTargetSelectorOpen] = useState(false)
+  const [globalMaskOpen, setGlobalMaskOpen] = useState(false)
+  const [globalMaskTitle, setGlobalMaskTitile] = useState(null)
   const [fetchedCard, setFetchedCard] = useState('/card_ph.png')
 
   useEffect(() => {
@@ -81,6 +86,8 @@ export default function Home() {
   const handleSaveSelfCard = () => {
     console.log('handleSaveSelfCard')
     html2canvas(refCardContent.current, {
+      width: 620,
+      height: 368,
       scale: 1
     }).then(function (canvas) {
       const canvasData = canvas.toDataURL('image/png')
@@ -98,6 +105,8 @@ export default function Home() {
   const handleSendCard = () => {
     console.log('handleSendCard')
     html2canvas(refCardContent.current, {
+      width: 620,
+      height: 368,
       scale: 1
     }).then(async function (canvas) {
       const canvasData = canvas.toDataURL('image/png')
@@ -109,7 +118,11 @@ export default function Home() {
         body: JSON.stringify({ target: target.folder, date: new Date().getTime(), card: canvasData }),
       })
       console.log(await res.json())
-      setSubAction(ACTION_SUB_WRITE_CARD_INIT)
+      unstable_batchedUpdates(() => {
+        setGlobalMaskOpen(false)
+        setGlobalMaskTitile(null)
+        setSubAction(ACTION_SUB_WRITE_CARD_INIT)
+      })
     })
   }
 
@@ -120,7 +133,11 @@ export default function Home() {
 
   const clickSendCard = (e) => {
     console.log('send card')
-    setSubAction(ACTION_SUB_SEND_CARD)
+    unstable_batchedUpdates(() => {
+      setGlobalMaskOpen(true)
+      setGlobalMaskTitile('正在寄出卡片...')
+      setSubAction(ACTION_SUB_SEND_CARD)
+    })
   }
 
   const clickSelectTarget = (e) => {
@@ -222,8 +239,12 @@ export default function Home() {
   }
 
   const clickViewRandom = (e) => {
-
+    // unstable_batchedUpdates(() => {
+    //   setGlobalMaskOpen(true)
+    //   setGlobalMaskTitile('正在捞卡片……')
+    // })
   }
+
   const clickViewTarget0 = (e) => {
 
   }
@@ -243,6 +264,45 @@ export default function Home() {
 
   }
   const clickSavePublicCard = (e) => {
+
+  }
+
+  const fetchCard = (target) => {
+    let needUpdate = false
+    if (!userCard) userCard = getLocalItem()
+    if (userCard && userCard.lastUpdate) {
+      if (Date.now() - userCard.lastUpdate > 5 * 60 * 1000) {
+        needUpdate = true
+      }
+    } else {
+      needUpdate = true
+    }
+
+    if (needUpdate) {
+      //需要先同步云端各个TARGET的总计
+    } else {
+      const userTarget = userCard['target'][target]
+      console.log(userTarget)
+      const remote = Array.from({ length: userTarget.remote_count }, (v, k) => k)
+      if (userTarget.local_used && userTarget.local_used.length > 0) {
+        
+        newRemote = remote.filter((x) => !userTarget.local_used.some((item) => arr.indexOf(x) === item))
+      }
+
+      // const randomMath.floor(userTarget.remote_count * Math.random())
+    }
+
+  }
+
+  const getLocalItem = () => {
+    const item = localStorage.getItem('USER_CARD')
+    if (item) {
+      return JSON.parse(item)
+    }
+    return null
+  }
+
+  const fetchCardByTargetAndIndex = (target, index) => {
 
   }
 
@@ -267,6 +327,7 @@ export default function Home() {
       </div>
 
       <TargetSelector open={targetSelectorOpen} onSelect={onTargetSelect} onCancel={onTargetCancel} />
+      <GlobalMask open={globalMaskOpen} title={globalMaskTitle} />
     </>
   )
 }
