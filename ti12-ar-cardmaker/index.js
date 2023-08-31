@@ -2,19 +2,24 @@ const path = require('path')
 const redis = require('redis')
 const fs = require('fs')
 
+const home = require('os').homedir()
+const mainFolder = path.join(home, 'ti12ar')
+
 function createFolders() {
-    fs.mkdirSync('D:\\ti12ar\\0', { recursive: true })
-    fs.mkdirSync('D:\\ti12ar\\1', { recursive: true })
-    fs.mkdirSync('D:\\ti12ar\\2', { recursive: true })
-    fs.mkdirSync('D:\\ti12ar\\3', { recursive: true })
-    fs.mkdirSync('D:\\ti12ar\\4', { recursive: true })
-    fs.mkdirSync('D:\\ti12ar\\5', { recursive: true })
+    fs.mkdirSync(path.join(mainFolder, '0'), { recursive: true })
+    fs.mkdirSync(path.join(mainFolder, '1'), { recursive: true })
+    fs.mkdirSync(path.join(mainFolder, '2'), { recursive: true })
+    fs.mkdirSync(path.join(mainFolder, '3'), { recursive: true })
+    fs.mkdirSync(path.join(mainFolder, '4'), { recursive: true })
+    fs.mkdirSync(path.join(mainFolder, '5'), { recursive: true })
 }
 
 async function initRedis() {
-    const client = redis.createClient({
-        url: 'redis://default:next@192.168.2.39:6379'
-    });
+    // const client = redis.createClient({
+    //     url: 'redis://default:next@192.168.2.39:6379'
+    // })
+
+    const client = redis.createClient()
 
     client.on('error', err => console.log('Redis Client Error', err))
 
@@ -23,7 +28,8 @@ async function initRedis() {
     console.log('connect succ')
 
     //从文件系统中重建redis list缓存
-    const mainFolder = path.resolve('D:\\ti12ar')
+    // const mainFolder = path.resolve('D:\\ti12ar')
+    // const fullMainFolder = path.resolve(mainFolder)
     const subFiles = fs.readdirSync(mainFolder)
     console.log(subFiles)
     subFiles.forEach((subFile) => {
@@ -63,7 +69,7 @@ async function initRedis() {
             const fileName = target + '_' + Date.now() + '.png'
             console.log('file save:' + fileName)
             const buff = Buffer.from(base64, 'base64')
-            fs.writeFileSync('D:\\ti12ar\\' + target + '\\' + fileName, buff)
+            fs.writeFileSync(path.join(mainFolder, target, fileName), buff)
             client.rPush('TARGET:' + target, fileName)
             console.log('file rpush')
         }

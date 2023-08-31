@@ -238,11 +238,53 @@ export default function Home() {
     })
   }
 
-  const clickViewRandom = (e) => {
+  const clickViewRandom = async (e) => {
     // unstable_batchedUpdates(() => {
     //   setGlobalMaskOpen(true)
     //   setGlobalMaskTitile('正在捞卡片……')
     // })
+    const localData = getLocalItem()
+    if (!localData) {
+      const res = await fetch('/api/card/sum', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      const { code, message, data } = await res.json()
+      if (code == 200) {
+        console.log(data)
+        const _localData = {}
+        _localData['lastUpdate'] = Date.now()
+        _localData['target0'] = {
+          'remote_sum': data[0],
+          'available_index': Array.from({ length: data[0] }, (v, k) => k)
+        }
+        _localData['target1'] = {
+          'remote_sum': data[1],
+          'available_index': Array.from({ length: data[1] }, (v, k) => k)
+        }
+        _localData['target2'] = {
+          'remote_sum': data[2],
+          'available_index': Array.from({ length: data[2] }, (v, k) => k)
+        }
+        _localData['target3'] = {
+          'remote_sum': data[3],
+          'available_index': Array.from({ length: data[3] }, (v, k) => k)
+        }
+        _localData['target4'] = {
+          'remote_sum': data[4],
+          'available_index': Array.from({ length: data[4] }, (v, k) => k)
+        }
+        _localData['target5'] = {
+          'remote_sum': data[5],
+          'available_index': Array.from({ length: data[5] }, (v, k) => k)
+        }
+
+        console.log(JSON.stringify(_localData))
+      }
+
+    }
   }
 
   const clickViewTarget0 = (e) => {
@@ -285,7 +327,7 @@ export default function Home() {
       console.log(userTarget)
       const remote = Array.from({ length: userTarget.remote_count }, (v, k) => k)
       if (userTarget.local_used && userTarget.local_used.length > 0) {
-        
+
         newRemote = remote.filter((x) => !userTarget.local_used.some((item) => arr.indexOf(x) === item))
       }
 
