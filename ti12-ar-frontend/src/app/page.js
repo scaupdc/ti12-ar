@@ -3,7 +3,7 @@
 import styles from './page.module.css'
 import { font } from './font'
 import html2canvas from 'html2canvas'
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import TargetSelector from './target_selector'
 import { unstable_batchedUpdates } from 'react-dom'
 import GlobalMask from './global_mask'
@@ -50,7 +50,10 @@ const TARGETS = [
   }
 ]
 
-let userCard
+const UPDATE_DELAY = 1 * 60 * 100
+
+let localData = null
+let focusUpdate = false
 
 export default function Home() {
   const refCardContent = useRef(null)
@@ -117,10 +120,14 @@ export default function Home() {
         },
         body: JSON.stringify({ target: target.folder, date: new Date().getTime(), card: canvasData }),
       })
-      console.log(await res.json())
+      const { code, message, data } = await res.json()
+      if (code == 200) {
+        focusUpdate = true
+      } else {
+        console.log('/api/card fail:', message)
+      }
       unstable_batchedUpdates(() => {
         setGlobalMaskOpen(false)
-        setGlobalMaskTitile(null)
         setSubAction(ACTION_SUB_WRITE_CARD_INIT)
       })
     })
@@ -179,13 +186,13 @@ export default function Home() {
       return (
         <div className={styles.viewBottomTools}>
           <div className={styles.viewBtnGroup}>
-            <button className={`${styles.btn} ${font.className}`} onClick={clickViewRandom}>随便看</button>
-            <button className={`${styles.btn} ${font.className}`} onClick={clickViewTarget0}>看AR</button>
-            <button className={`${styles.btn} ${font.className}`} onClick={clickViewTarget1}>看楼神</button>
-            <button className={`${styles.btn} ${font.className}`} onClick={clickViewTarget2}>看超哥</button>
-            <button className={`${styles.btn} ${font.className}`} onClick={clickViewTarget3}>看查猪</button>
-            <button className={`${styles.btn} ${font.className}`} onClick={clickViewTarget4}>看森哥</button>
-            <button className={`${styles.btn} ${font.className}`} onClick={clickViewTarget5}>看天哥</button>
+            <button className={`${styles.btn} ${font.className}`} onClick={(e) => clickViewRandom(-1)}>随便看</button>
+            <button className={`${styles.btn} ${font.className}`} onClick={(e) => clickViewRandom(0)}>看AR</button>
+            <button className={`${styles.btn} ${font.className}`} onClick={(e) => clickViewRandom(1)}>看楼神</button>
+            <button className={`${styles.btn} ${font.className}`} onClick={(e) => clickViewRandom(2)}>看超哥</button>
+            <button className={`${styles.btn} ${font.className}`} onClick={(e) => clickViewRandom(3)}>看查猪</button>
+            <button className={`${styles.btn} ${font.className}`} onClick={(e) => clickViewRandom(4)}>看森哥</button>
+            <button className={`${styles.btn} ${font.className}`} onClick={(e) => clickViewRandom(5)}>看天哥</button>
           </div>
           <div>
             <button className={`${styles.btn} ${font.className}`} onClick={clickSavePublicCard}>下载卡片</button>
@@ -238,13 +245,34 @@ export default function Home() {
     })
   }
 
-  const clickViewRandom = async (e) => {
+  const clickViewRandom = async (target) => {
     // unstable_batchedUpdates(() => {
     //   setGlobalMaskOpen(true)
     //   setGlobalMaskTitile('正在捞卡片……')
     // })
-    const localData = getLocalItem()
-    if (!localData) {
+
+    let needUpdate = false
+    if (focusUpdate) {
+      needUpdate = true
+      focusUpdate = false
+    } else {
+      if (!localData) localData = getLocalData()
+      if (localData) {
+        if (Date.now() - localData['lastUpdate'] > UPDATE_DELAY) {
+          needUpdate = true
+        }
+      } else {
+        needUpdate = true
+      }
+    }
+
+    if (needUpdate) {
+      console.log('Start update.')
+      unstable_batchedUpdates(async () => {
+        setGlobalMaskOpen(true)
+        setGlobalMaskTitile('正在更新卡片库...')
+      })
+
       const res = await fetch('/api/card/sum', {
         method: 'GET',
         headers: {
@@ -253,99 +281,130 @@ export default function Home() {
       })
       const { code, message, data } = await res.json()
       if (code == 200) {
+        console.log('Remote data:')
         console.log(data)
-        const _localData = {}
-        _localData['lastUpdate'] = Date.now()
-        _localData['target0'] = {
-          'remote_sum': data[0],
-          'available_index': Array.from({ length: data[0] }, (v, k) => k)
-        }
-        _localData['target1'] = {
-          'remote_sum': data[1],
-          'available_index': Array.from({ length: data[1] }, (v, k) => k)
-        }
-        _localData['target2'] = {
-          'remote_sum': data[2],
-          'available_index': Array.from({ length: data[2] }, (v, k) => k)
-        }
-        _localData['target3'] = {
-          'remote_sum': data[3],
-          'available_index': Array.from({ length: data[3] }, (v, k) => k)
-        }
-        _localData['target4'] = {
-          'remote_sum': data[4],
-          'available_index': Array.from({ length: data[4] }, (v, k) => k)
-        }
-        _localData['target5'] = {
-          'remote_sum': data[5],
-          'available_index': Array.from({ length: data[5] }, (v, k) => k)
+
+        if (localData) {
+          console.log('Append')
+          //追加
+          for (let i = 0; i < 6; i++) {
+            const tempTarget = localData[i.toString()]
+            const oldSum = tempTarget['remote_sum']
+            const newSum = data[i]
+            if (newSum > oldSum) {
+              const pushData = Array.from({ length: newSum - oldSum }, (v, k) => k + oldSum)
+              console.log('target' + i + ' pushData=' + pushData)
+              tempTarget['available_index'].push(...pushData)
+              tempTarget['remote_sum'] = newSum
+            }//ignore other case
+          }
+        } else {
+          console.log('Overwrite')
+          //替换
+          const _localData = {}
+          _localData['0'] = {
+            'remote_sum': data[0],
+            'available_index': Array.from({ length: data[0] }, (v, k) => k)
+          }
+          _localData['1'] = {
+            'remote_sum': data[1],
+            'available_index': Array.from({ length: data[1] }, (v, k) => k)
+          }
+          _localData['2'] = {
+            'remote_sum': data[2],
+            'available_index': Array.from({ length: data[2] }, (v, k) => k)
+          }
+          _localData['3'] = {
+            'remote_sum': data[3],
+            'available_index': Array.from({ length: data[3] }, (v, k) => k)
+          }
+          _localData['4'] = {
+            'remote_sum': data[4],
+            'available_index': Array.from({ length: data[4] }, (v, k) => k)
+          }
+          _localData['5'] = {
+            'remote_sum': data[5],
+            'available_index': Array.from({ length: data[5] }, (v, k) => k)
+          }
+          localData = _localData
         }
 
-        console.log(JSON.stringify(_localData))
+        localData['lastUpdate'] = Date.now()
+        console.log(JSON.stringify(localData))
+
+        localStorage.setItem('USER_CARD', JSON.stringify(localData))
+
+        unstable_batchedUpdates(async () => {
+          setGlobalMaskOpen(false)
+        })
+
+        console.log('Updated.')
+      } else {
+        console.log('/api/card/sum fail:', message)
+      }
+    } else {
+      console.log('Do not need to update.')
+    }
+
+    console.log('After checking.')
+
+    let selectedTarget
+
+    if (target == -1) {
+      //随便看
+      const notEmptyTargets = []
+      if (localData['0']['available_index'].length > 0) notEmptyTargets.push('0')
+      if (localData['1']['available_index'].length > 0) notEmptyTargets.push('1')
+      if (localData['2']['available_index'].length > 0) notEmptyTargets.push('2')
+      if (localData['3']['available_index'].length > 0) notEmptyTargets.push('3')
+      if (localData['4']['available_index'].length > 0) notEmptyTargets.push('4')
+      if (localData['5']['available_index'].length > 0) notEmptyTargets.push('5')
+
+      if (notEmptyTargets.length > 0) {
+        selectedTarget = notEmptyTargets[Math.floor(notEmptyTargets.length * Math.random())]
+      }
+    } else {
+      //指定看
+      selectedTarget = target
+    }
+
+    if (selectedTarget && localData[selectedTarget]['available_index'].length > 0) {
+      const localDataTarget = localData[selectedTarget]
+      const localDataAvailableIndex = localDataTarget['available_index']
+      const selectedIndex = localDataAvailableIndex[Math.floor(localDataAvailableIndex.length * Math.random())]
+
+      console.log('selectedTarget=' + selectedTarget)
+      console.log('selectedIndex=' + selectedIndex)
+
+      localDataAvailableIndex.splice(localDataAvailableIndex.indexOf(selectedIndex), 1)
+      if (localDataAvailableIndex.length == 0) {
+        //重置
+        console.log('Reset available_index')
+        localDataTarget['available_index'] = Array.from({ length: localDataTarget['remote_sum'] }, (v, k) => k)
       }
 
+      localStorage.setItem('USER_CARD', JSON.stringify(localData))
+      console.log('/ti12ar/' + selectedTarget + '/' + selectedTarget + '_' + selectedIndex + '.png')
+      setFetchedCard('http://localhost/ti12ar/' + selectedTarget + '/' + selectedTarget + '_' + selectedIndex + '.png')
+
+      console.log('After rolling:')
+      console.log(JSON.stringify(localData))
+    } else {
+      console.log('No card found.')
     }
   }
 
-  const clickViewTarget0 = (e) => {
-
-  }
-  const clickViewTarget1 = (e) => {
-
-  }
-  const clickViewTarget2 = (e) => {
-
-  }
-  const clickViewTarget3 = (e) => {
-
-  }
-  const clickViewTarget4 = (e) => {
-
-  }
-  const clickViewTarget5 = (e) => {
-
-  }
   const clickSavePublicCard = (e) => {
 
   }
 
-  const fetchCard = (target) => {
-    let needUpdate = false
-    if (!userCard) userCard = getLocalItem()
-    if (userCard && userCard.lastUpdate) {
-      if (Date.now() - userCard.lastUpdate > 5 * 60 * 1000) {
-        needUpdate = true
-      }
-    } else {
-      needUpdate = true
-    }
-
-    if (needUpdate) {
-      //需要先同步云端各个TARGET的总计
-    } else {
-      const userTarget = userCard['target'][target]
-      console.log(userTarget)
-      const remote = Array.from({ length: userTarget.remote_count }, (v, k) => k)
-      if (userTarget.local_used && userTarget.local_used.length > 0) {
-
-        newRemote = remote.filter((x) => !userTarget.local_used.some((item) => arr.indexOf(x) === item))
-      }
-
-      // const randomMath.floor(userTarget.remote_count * Math.random())
-    }
-
-  }
-
-  const getLocalItem = () => {
+  const getLocalData = () => {
     const item = localStorage.getItem('USER_CARD')
     if (item) {
+      console.log(item)
       return JSON.parse(item)
     }
     return null
-  }
-
-  const fetchCardByTargetAndIndex = (target, index) => {
-
   }
 
   console.log('render')

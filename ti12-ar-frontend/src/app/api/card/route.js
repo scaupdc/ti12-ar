@@ -11,7 +11,7 @@ export async function POST(request) {
 
   const client = await createClient()
 
-  client.on('error', err => console.log('Redis Client Error', err))
+  client.on('error', err => console.log('Redis Client Error' + err))
 
   await client.connect()
 

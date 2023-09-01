@@ -21,7 +21,7 @@ async function initRedis() {
 
     const client = redis.createClient()
 
-    client.on('error', err => console.log('Redis Client Error', err))
+    client.on('error', err => console.log('Redis Client Error' + err))
 
     console.log('begin connect')
     client.connect();
@@ -66,7 +66,9 @@ async function initRedis() {
         if (val) {
             const { target, card } = JSON.parse(val.element)
             const base64 = card.replace(/^data:image\/\w+;base64,/, "");//去掉图片base64码前面部分data:image/png;base64
-            const fileName = target + '_' + Date.now() + '.png'
+            console.log('query len')
+            const len = await client.lLen('TARGET:' + target)
+            const fileName = target + '_' + len + '.png'
             console.log('file save:' + fileName)
             const buff = Buffer.from(base64, 'base64')
             fs.writeFileSync(path.join(mainFolder, target, fileName), buff)
