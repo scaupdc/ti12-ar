@@ -43,6 +43,7 @@
   position: absolute;
   left: 80px;
   top: 44px;
+  cursor: pointer;
 }
 
 .tailWrapper {

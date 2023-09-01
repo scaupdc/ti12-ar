@@ -50,13 +50,14 @@ const TARGETS = [
   }
 ]
 
-const UPDATE_DELAY = 1 * 60 * 100
+const UPDATE_DELAY = 1 * 60 * 1000
 
 let localData = null
 let focusUpdate = false
 
 export default function Home() {
   const refCardContent = useRef(null)
+  const refCardInput = useRef(null)
   const [mainAction, setMainAction] = useState(ACTION_MAIN_WRITE_CARD)
   const [subAction, setSubAction] = useState(ACTION_SUB_WRITE_CARD_INIT)
   const [target, setTarget] = useState(TARGETS[0])
@@ -139,6 +140,11 @@ export default function Home() {
   }
 
   const clickSendCard = (e) => {
+    const userInput = refCardInput.current.innerHTML
+    if (!userInput || userInput == '') {
+      console.log('请带上您的祝福！')
+      return
+    }
     console.log('send card')
     unstable_batchedUpdates(() => {
       setGlobalMaskOpen(true)
@@ -212,10 +218,10 @@ export default function Home() {
               <span className={styles.toWho}>{target.name}</span>
             </div>
             <div className={styles.contentWrapper}>
-              <div contentEditable='true' className={`${styles.content} ${font.className}`} rows='3' placeholder='写上您的祝福吧……'></div>
+              <div ref={refCardInput} contentEditable='true' suppressContentEditableWarning className={`${styles.content} ${font.className}`} rows='3' placeholder='写上您的祝福吧……'></div>
             </div>
             <div className={styles.tailWrapper}>
-              <span className={styles.fromWho} contentEditable='true' placeholder='匿名粉丝'></span>
+              <span className={styles.fromWho} contentEditable='true' suppressContentEditableWarning placeholder='匿名粉丝'></span>
             </div>
           </div>
         </div>
@@ -246,22 +252,20 @@ export default function Home() {
   }
 
   const clickViewRandom = async (target) => {
-    // unstable_batchedUpdates(() => {
-    //   setGlobalMaskOpen(true)
-    //   setGlobalMaskTitile('正在捞卡片……')
-    // })
-
     let needUpdate = false
     if (focusUpdate) {
+      console.log('focusUpdate')
       needUpdate = true
       focusUpdate = false
     } else {
       if (!localData) localData = getLocalData()
       if (localData) {
         if (Date.now() - localData['lastUpdate'] > UPDATE_DELAY) {
+          console.log('lastUpdate delay')
           needUpdate = true
         }
       } else {
+        console.log('local data empty')
         needUpdate = true
       }
     }
@@ -368,7 +372,7 @@ export default function Home() {
       selectedTarget = target
     }
 
-    if (selectedTarget && localData[selectedTarget]['available_index'].length > 0) {
+    if (selectedTarget >= 0 && localData[selectedTarget]['available_index'].length > 0) {
       const localDataTarget = localData[selectedTarget]
       const localDataAvailableIndex = localDataTarget['available_index']
       const selectedIndex = localDataAvailableIndex[Math.floor(localDataAvailableIndex.length * Math.random())]
