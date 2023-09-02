@@ -51,7 +51,7 @@ npm run start
 ```
 cd ti12-ar-cardmaker
 npm install
-node index.js
+npm run start
 ```
 6. 浏览器打开localhost:3000
 7. 为了减轻服务器计算压力，会定期将卡片索引数据存储在浏览器localStorage，在查看卡片时由浏览器计算随机展示的图片索引，最终通过nginx直接访问图片URL。
