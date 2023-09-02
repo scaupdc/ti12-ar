@@ -13,11 +13,28 @@ NODEJS后端卡片制作服务
 1. 安装并运行redis。注：代码中采用默认连接方式，可根据实际情况修改。
 2. 安装并运行nginx。注：nginx用于代理卡片图片的访问。当前配置为：
 ```
+user  nginx;
+worker_processes  auto;
+
+error_log  /var/log/nginx/error.log notice;
+pid        /var/run/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
 http {
     server {
+        listen 80;
+
+        location / {
+                proxy_pass http://localhost:3000;
+        }
+
         location /ti12ar/ {
-				#可根据实际情况修改
-                root /xxxxxxxxx;
+                #根据实际情况配置root
+                root /home/fire;
+                autoindex on;
         }
     }
 }
