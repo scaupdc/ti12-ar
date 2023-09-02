@@ -278,7 +278,7 @@ export default function Home() {
       })
 
       const res = await fetch('/api/card/sum', {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         }

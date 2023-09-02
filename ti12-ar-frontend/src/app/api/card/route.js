@@ -13,9 +13,12 @@ export async function POST(request) {
 
   client.on('error', err => console.log('Redis Client Error' + err))
 
+  console.log('start connect redis')
   await client.connect()
-
+  console.log('redis connected')
+  
   await client.lPush('CARD', JSON.stringify(bodyJson))
+  console.log('lpush CARD succ')
 
   await client.disconnect()
 
