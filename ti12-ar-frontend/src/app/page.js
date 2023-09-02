@@ -399,7 +399,12 @@ export default function Home() {
   }
 
   const clickSavePublicCard = (e) => {
-
+    let aLink = document.createElement('a');
+    aLink.href = fetchedCard;
+    aLink.download = new Date().getTime() + '.png';
+    aLink.target = 'blank'
+    const event = new MouseEvent('click')
+    aLink.dispatchEvent(event)
   }
 
   const getLocalData = () => {
