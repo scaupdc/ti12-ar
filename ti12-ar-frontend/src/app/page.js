@@ -389,7 +389,7 @@ export default function Home() {
 
       localStorage.setItem('USER_CARD', JSON.stringify(localData))
       console.log('/ti12ar/' + selectedTarget + '/' + selectedTarget + '_' + selectedIndex + '.png')
-      setFetchedCard('http://localhost/ti12ar/' + selectedTarget + '/' + selectedTarget + '_' + selectedIndex + '.png')
+      setFetchedCard('/ti12ar/' + selectedTarget + '/' + selectedTarget + '_' + selectedIndex + '.png')
 
       console.log('After rolling:')
       console.log(JSON.stringify(localData))
