@@ -1,0 +1,35 @@
+services:
+  ti12-ar-frontend:
+    build: ./ti12-ar-frontend
+    network_mode: host
+    restart: on-failure
+    ports:
+      - "3000:3000"
+    depends_on:
+      - "ti12-docker-redis"
+      - "ti12-docker-nginx"
+  ti12-ar-cardmaker:
+    build: ./ti12-ar-cardmaker
+    network_mode: host
+    restart: on-failure
+    volumes:
+      - type: bind
+        source: /home/fire/ti12ar
+        target: /root/ti12ar
+    depends_on:
+      - "ti12-docker-redis"
+      - "ti12-docker-nginx"
+  ti12-docker-redis:
+    image: "redis"
+    network_mode: host
+    restart: on-failure
+  ti12-docker-nginx:
+    build: ./ti12-docker-nginx
+    network_mode: host
+    restart: on-failure
+    volumes:
+      - type: bind
+        source: /home/fire/ti12ar
+        target: /usr/ti12ar
+
+

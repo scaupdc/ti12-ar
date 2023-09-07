@@ -90,4 +90,12 @@ sudo docker build -t ti12-ar-cardmaker .
 sudo docker run --name ti12-ar-cardmaker --net host -v /your_host_card_image_path:/root/ti12ar ti12-ar-cardmaker
 ```
 # 3-Docker Compose运行：
-TODO
+此方式是步骤最少最傻瓜化的部署运行方式。
+编辑compose.yaml文件，将里面volumes的source修改为实际宿主机目录
+```
+sudo docker compose up /独立compose则运行：sudo docker-compose up
+```
+需要停止整个服务时：
+```
+sudo docker compose down
+```
