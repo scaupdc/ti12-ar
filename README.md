@@ -90,3 +90,4 @@ sudo docker build -t ti12-ar-cardmaker .
 sudo docker run --name ti12-ar-cardmaker --net host -v /your_host_card_image_path:/root/ti12ar ti12-ar-cardmaker
 ```
 # 3-Docker Compose运行：
+TODO
