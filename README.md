@@ -62,7 +62,7 @@ cd ti12-ar-cardmaker
 npm install /OR yarn
 npm run start /OR yarn start
 ```
-6. 浏览器打开localhost访问，会代理到3000端口。
+6. 浏览器打开localhost访问，Nginx会代理到3000端口。
 7. 为了减轻服务器计算压力，会定期将卡片索引数据存储在浏览器localStorage，在查看卡片时由浏览器计算随机展示的图片索引，最终通过nginx直接访问图片URL。
 # 2-独立Docker容器运行：
 1. Nginx的容器化：
